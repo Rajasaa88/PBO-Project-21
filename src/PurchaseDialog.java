@@ -1,8 +1,8 @@
-import javax.swing.*;
 import java.awt.*;
 import java.sql.*;
 import java.text.NumberFormat;
 import java.util.Locale;
+import javax.swing.*;
 
 public class PurchaseDialog extends JDialog {
     private Car car;
@@ -21,7 +21,7 @@ public class PurchaseDialog extends JDialog {
         add(new JLabel("TAX: " + fmt.format(pay.calculateTax()), SwingConstants.CENTER));
         
         JLabel lTotal = new JLabel("TOTAL: " + fmt.format(pay.calculateTotal()), SwingConstants.CENTER);
-        lTotal.setForeground(Color.GREEN); lTotal.setFont(new Font("Arial", Font.BOLD, 20));
+        lTotal.setForeground(Color.BLACK); lTotal.setFont(new Font("Arial", Font.BOLD, 20));
         add(lTotal);
 
         JButton btn = new JButton("PAY NOW");

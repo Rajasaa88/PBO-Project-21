@@ -7,7 +7,7 @@ public class LoginFrame extends JFrame {
     JPasswordField txtPass = new JPasswordField(15);
 
     public LoginFrame() {
-        setTitle("Elite Login"); setSize(350, 200); 
+        setTitle("AutoAAR Login"); setSize(350, 200); 
         setDefaultCloseOperation(EXIT_ON_CLOSE); setLocationRelativeTo(null);
         setLayout(new GridBagLayout());
         

@@ -13,7 +13,7 @@ public class AppNavigationFrame extends JFrame {
 
     public AppNavigationFrame(String user) {
         this.currentUser = user;
-        setTitle("Elite Auto Gallery - User: " + user);
+        setTitle("AutoAAR - User: " + user);
         setSize(1000, 750); 
         setDefaultCloseOperation(EXIT_ON_CLOSE); 
         setLocationRelativeTo(null);
@@ -25,7 +25,7 @@ public class AppNavigationFrame extends JFrame {
 
         // Label User di Kiri
         JLabel lblUser = new JLabel("Welcome, " + user.toUpperCase());
-        lblUser.setForeground(Color.CYAN);
+        lblUser.setForeground(Color.WHITE);
         lblUser.setFont(new Font("Arial", Font.BOLD, 16));
         
         // Tombol Logout di Kanan
