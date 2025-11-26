@@ -9,86 +9,108 @@ public class AppNavigationFrame extends JFrame {
     private CardLayout cards;
     private JPanel mainPanel, modelContainer;
     private String currentUser, selectedBrand, selectedTier;
-    private JLabel footer;
+
+    // Footer dihapus karena monitor pindah ke menu sendiri
 
     public AppNavigationFrame(String user) {
         this.currentUser = user;
         setTitle("AutoAAR - User: " + user);
-        setSize(1000, 750); 
+        setSize(1000, 850); 
         setDefaultCloseOperation(EXIT_ON_CLOSE); 
         setLocationRelativeTo(null);
 
-        // --- 1. HEADER (LOGOUT & INFO USER) ---
+        // --- 1. HEADER ATAS (MENU BARU) ---
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(30, 30, 30)); // Abu Gelap
-        header.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Padding
+        header.setBackground(new Color(20, 20, 20)); 
+        header.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        // Label User di Kiri
-        JLabel lblUser = new JLabel("Welcome, " + user.toUpperCase());
-        lblUser.setForeground(Color.WHITE);
-        lblUser.setFont(new Font("Arial", Font.BOLD, 16));
+        // Info User (Kiri)
+        JLabel lblUser = new JLabel("Logged in as: " + user.toUpperCase());
+        lblUser.setForeground(Color.LIGHT_GRAY);
+        lblUser.setFont(new Font("Arial", Font.BOLD, 14));
         
-        // Tombol Logout di Kanan
+        // Panel Tombol Kanan (Monitor & Logout)
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        btnPanel.setOpaque(false);
+
+        // A. TOMBOL LIVE MONITOR (BARU)
+        JButton btnMonitor = new JButton("LIVE MONITOR");
+        btnMonitor.setBackground(new Color(0, 100, 200)); // Biru
+        btnMonitor.setForeground(Color.WHITE);
+        btnMonitor.setFocusPainted(false);
+        btnMonitor.setFont(new Font("Arial", Font.BOLD, 12));
+        btnMonitor.addActionListener(e -> new MonitorDialog(this)); // Buka Jendela Monitor
+
+        // B. TOMBOL LOGOUT
         JButton btnLogout = new JButton("LOGOUT");
-        btnLogout.setBackground(Color.RED);
+        btnLogout.setBackground(new Color(200, 50, 50)); // Merah
         btnLogout.setForeground(Color.WHITE);
         btnLogout.setFocusPainted(false);
         btnLogout.setFont(new Font("Arial", Font.BOLD, 12));
-        
-        // Aksi Logout
         btnLogout.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(this, 
-                "Apakah Anda yakin ingin Logout?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
-            
-            if (confirm == JOptionPane.YES_OPTION) {
-                new LoginFrame(); // Buka Login lagi
-                dispose();        // Tutup Menu Utama
+            if (JOptionPane.showConfirmDialog(this, "Logout?", "Confirm", JOptionPane.YES_NO_OPTION) == 0) {
+                new LoginFrame(); dispose();
             }
         });
 
+        btnPanel.add(btnMonitor);
+        btnPanel.add(btnLogout);
+
         header.add(lblUser, BorderLayout.WEST);
-        header.add(btnLogout, BorderLayout.EAST);
+        header.add(btnPanel, BorderLayout.EAST);
         add(header, BorderLayout.NORTH);
 
-        // --- 2. MAIN CONTENT (Tengah) ---
+        // --- 2. MAIN CONTENT ---
         cards = new CardLayout();
         mainPanel = new JPanel(cards); 
-        mainPanel.setBackground(Color.BLACK);
+        mainPanel.setBackground(Color.BLACK); 
         
-        initPages(); // Setup Brand -> Tier -> Model
+        initPages(); 
         add(mainPanel, BorderLayout.CENTER);
 
-        // --- 3. FOOTER MONITOR (Bawah) ---
-        footer = new JLabel("System Ready...", SwingConstants.CENTER);
-        footer.setOpaque(true); 
-        footer.setBackground(Color.BLACK); 
-        footer.setForeground(Color.GREEN);
-        footer.setPreferredSize(new Dimension(getWidth(), 40));
-        footer.setBorder(BorderFactory.createMatteBorder(1,0,0,0, Color.GRAY));
-        add(footer, BorderLayout.SOUTH);
-
-        // --- THREAD START ---
-        new SalesMonitor(footer).start(); // Thread Database Check
-
+        // Footer dihapus sesuai request
+        
         cards.show(mainPanel, "BRAND");
         setVisible(true);
     }
 
-    // --- HALAMAN 1: PILIH BRAND ---
     private void initPages() {
-        // A. Brand Page
+        // --- PAGE 1: BRAND SELECTION ---
         JPanel pBrand = new JPanel(new BorderLayout()); 
-        pBrand.setBackground(Color.DARK_GRAY);
+        pBrand.setBackground(Color.BLACK); 
         
-        JLabel title = new JLabel("SELECT MANUFACTURER", SwingConstants.CENTER);
-        title.setFont(new Font("SansSerif", Font.BOLD, 28)); 
-        title.setForeground(Color.WHITE);
-        title.setBorder(BorderFactory.createEmptyBorder(20,0,0,0));
-        pBrand.add(title, BorderLayout.NORTH);
+        ImagePanel welcomePanel = new ImagePanel("img/main.jpg"); 
+        welcomePanel.setLayout(new GridBagLayout()); 
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0; gbc.gridy = 0; gbc.insets = new Insets(10, 10, 10, 10); 
+        gbc.anchor = GridBagConstraints.CENTER; 
 
-        JPanel gridBrand = new JPanel(new GridLayout(0,3,20,20)); 
-        gridBrand.setBackground(Color.DARK_GRAY);
-        gridBrand.setBorder(BorderFactory.createEmptyBorder(30,30,30,30));
+        JLabel lblTitle = new JLabel("Welcome to AutoAAR");
+        lblTitle.setFont(new Font("Serif", Font.BOLD, 48)); 
+        lblTitle.setForeground(Color.WHITE); 
+        
+        JLabel lblDesc = new JLabel("<html><center>" +
+                "Showroom mobil sport dan hypercar terlengkap dan terpercaya.<br>" +
+                "Temukan kendaraan impian Anda dengan kualitas terbaik dan harga kompetitif.<br>" +
+                "<br><i>Speed, Luxury, and Prestige.</i>" +
+                "</center></html>", SwingConstants.CENTER); 
+        lblDesc.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        lblDesc.setForeground(Color.WHITE); 
+
+        JLabel lblSelect = new JLabel("SELECT MANUFACTURER");
+        lblSelect.setFont(new Font("SansSerif", Font.BOLD, 22));
+        lblSelect.setForeground(Color.WHITE);
+
+        welcomePanel.add(lblTitle, gbc);
+        gbc.gridy = 1; welcomePanel.add(lblDesc, gbc);
+        gbc.gridy = 2; gbc.insets = new Insets(40, 10, 10, 10); 
+        welcomePanel.add(lblSelect, gbc);
+
+        pBrand.add(welcomePanel, BorderLayout.NORTH);
+
+        JPanel gridBrand = new JPanel(new GridLayout(0, 3, 40, 40)); 
+        gridBrand.setBackground(Color.BLACK);
+        gridBrand.setBorder(BorderFactory.createEmptyBorder(30, 50, 50, 50));
         
         try {
             Connection conn = KoneksiDB.configDB();
@@ -96,16 +118,20 @@ public class AppNavigationFrame extends JFrame {
                 ResultSet rs = conn.createStatement().executeQuery("SELECT DISTINCT brand FROM cars ORDER BY brand");
                 while(rs.next()) {
                     String b = rs.getString("brand");
-                    JButton btn = createBtn(b, "img/"+b+".png");
+                    JButton btn = createBtn(b, "img/"+b+".png", 180, 180); 
                     btn.addActionListener(e -> { selectedBrand=b; cards.show(mainPanel, "TIER"); });
                     gridBrand.add(btn);
                 }
             }
         } catch(Exception e) {}
-        pBrand.add(new JScrollPane(gridBrand), BorderLayout.CENTER);
+        
+        JScrollPane scrollPane = new JScrollPane(gridBrand);
+        scrollPane.setBorder(null); 
+        scrollPane.getViewport().setBackground(Color.BLACK); 
+        pBrand.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(pBrand, "BRAND");
 
-        // B. Tier Page
+        // --- PAGE 2: TIER ---
         JPanel pTier = new JPanel(new GridBagLayout()); 
         pTier.setBackground(Color.BLACK);
         
@@ -122,7 +148,7 @@ public class AppNavigationFrame extends JFrame {
         pTier.add(b1,g); g.gridx=1; pTier.add(b2,g); g.gridy=1; g.gridwidth=2; pTier.add(bBack,g);
         mainPanel.add(pTier, "TIER");
 
-        // C. Model Page
+        // --- PAGE 3: MODEL ---
         JPanel pModel = new JPanel(new BorderLayout()); 
         pModel.setBackground(Color.BLACK);
         
@@ -132,7 +158,12 @@ public class AppNavigationFrame extends JFrame {
         
         modelContainer = new JPanel(new GridLayout(0,2,20,20)); 
         modelContainer.setBackground(Color.BLACK);
-        pModel.add(new JScrollPane(modelContainer), BorderLayout.CENTER);
+        
+        JScrollPane scrollModel = new JScrollPane(modelContainer);
+        scrollModel.setBorder(null);
+        scrollModel.getViewport().setBackground(Color.BLACK);
+        pModel.add(scrollModel, BorderLayout.CENTER);
+        
         mainPanel.add(pModel, "MODEL");
     }
 
@@ -153,12 +184,15 @@ public class AppNavigationFrame extends JFrame {
                 String img = rs.getString("image_file");
 
                 JPanel card = new JPanel(new BorderLayout()); 
-                card.setBackground(Color.DARK_GRAY);
-                card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                card.setBackground(new Color(25, 25, 25)); 
+                card.setBorder(BorderFactory.createLineBorder(new Color(50, 50, 50)));
                 
-                JButton btnImg = createBtn("", "img/"+img);
+                JButton btnImg = createBtn("", "img/"+img, 250, 150);
+                
                 String colorStock = stock > 0 ? "white" : "red";
-                String info = "<html><center><font color='white' size='4'>"+name+"</font><br><font color='yellow'>"+fmt.format(price)+"</font><br><font color='"+colorStock+"'>Stock: "+stock+"</font></center></html>";
+                String info = "<html><center><font color='white' size='4'>"+name+"</font><br>" +
+                              "<font color='yellow'>"+fmt.format(price)+"</font><br>" +
+                              "<font color='"+colorStock+"'>Stock: "+stock+"</font></center></html>";
                 
                 btnImg.addActionListener(e -> {
                     if(stock>0) {
@@ -167,11 +201,11 @@ public class AppNavigationFrame extends JFrame {
                     } else JOptionPane.showMessageDialog(this, "SOLD OUT");
                 });
 
-                // LOGIKA ADMIN ADD STOCK
                 if(currentUser.equalsIgnoreCase("admin")) {
                     JButton btnAdd = new JButton("[ADMIN] ADD STOCK (+)");
-                    btnAdd.setBackground(Color.GREEN);
-                    btnAdd.setForeground(Color.BLACK);
+                    btnAdd.setBackground(new Color(0, 150, 0)); 
+                    btnAdd.setForeground(Color.WHITE);
+                    btnAdd.setFocusPainted(false);
                     btnAdd.addActionListener(ev -> updateStock(id));
                     card.add(btnAdd, BorderLayout.NORTH);
                 }
@@ -181,7 +215,7 @@ public class AppNavigationFrame extends JFrame {
                 modelContainer.add(card);
             }
             if(!found) {
-                JLabel empty = new JLabel("No models.", SwingConstants.CENTER);
+                JLabel empty = new JLabel("No models available.", SwingConstants.CENTER);
                 empty.setForeground(Color.WHITE); modelContainer.add(empty);
             }
         } catch(Exception e) { e.printStackTrace(); }
@@ -202,10 +236,55 @@ public class AppNavigationFrame extends JFrame {
         }
     }
 
-    private JButton createBtn(String t, String p) {
-        JButton b = new JButton();
-        try { File f=new File(p); if(f.exists()) b.setIcon(new ImageIcon(new ImageIcon(p).getImage().getScaledInstance(200,120,4))); else b.setText(t); } catch(Exception e){b.setText(t);}
-        b.setContentAreaFilled(false); b.setBorderPainted(false); return b;
+    private JButton createBtn(String brandName, String path, int w, int h) {
+        JButton btn = new JButton();
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setHorizontalTextPosition(SwingConstants.CENTER);
+        btn.setVerticalTextPosition(SwingConstants.BOTTOM);
+
+        try {
+            File f = new File(path);
+            if (f.exists()) {
+                ImageIcon originalIcon = new ImageIcon(path);
+                Image scaledImage = originalIcon.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                btn.setIcon(new ImageIcon(scaledImage));
+            } else {
+                btn.setText("<html><center>"+brandName+"<br>(No Image)</center></html>");
+                btn.setForeground(Color.GRAY);
+            }
+        } catch (Exception e) {
+            btn.setText(brandName);
+            btn.setForeground(Color.GRAY);
+        }
+        return btn;
     }
-    private void styleBtn(JButton b, Color c) { b.setBackground(c); b.setForeground(Color.WHITE); b.setPreferredSize(new Dimension(200,100)); }
+
+    private void styleBtn(JButton b, Color c) { 
+        b.setBackground(c); 
+        b.setForeground(Color.WHITE); 
+        b.setPreferredSize(new Dimension(200,100)); 
+        b.setFont(new Font("Arial", Font.BOLD, 18));
+        b.setFocusPainted(false);
+    }
+
+    class ImagePanel extends JPanel {
+        private Image bgImage;
+        public ImagePanel(String imagePath) {
+            try { bgImage = new ImageIcon(imagePath).getImage(); } catch (Exception e) {}
+        }
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (bgImage != null) {
+                g.drawImage(bgImage, 0, 0, getWidth(), getHeight(), this);
+                g.setColor(new Color(0, 0, 0, 180)); 
+                g.fillRect(0, 0, getWidth(), getHeight());
+            } else {
+                g.setColor(Color.BLACK);
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        }
+    }
 }
