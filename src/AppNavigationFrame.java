@@ -215,7 +215,7 @@ public class AppNavigationFrame extends JFrame {
                 card.setBackground(new Color(25, 25, 25)); 
                 card.setBorder(BorderFactory.createLineBorder(new Color(50, 50, 50)));
 
-                ModernButton btnImg = createBtn("", "img/"+img, 250, 150);
+                ModernButton btnImg = createBtn("", "img/"+img, 400, 250);
                 
                 String colorStock = stock > 0 ? "white" : "red";
                 String info = "<html><center><font color='white' size='4'>"+name+"</font><br>" +
