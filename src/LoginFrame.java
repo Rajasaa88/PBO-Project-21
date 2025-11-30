@@ -1,129 +1,134 @@
 import java.awt.*;
+import java.awt.event.*;
 import java.sql.*;
 import javax.swing.*;
 
 public class LoginFrame extends JFrame {
-    // Komponen input dideklarasikan di sini agar bisa diakses method login()
-    private JTextField txtUser = new JTextField(15);
-    private JPasswordField txtPass = new JPasswordField(15);
+    private JTextField txtUser;
+    private JPasswordField txtPass;
 
     public LoginFrame() {
-        setTitle("AutoAAR Login");
-        setSize(500, 400); // Ukuran diperbesar sedikit agar background terlihat
+        setTitle("AutoAAR - Login");
+        setSize(900, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // 1. Buat Panel Background Custom (Mewarisi JPanel & Override paintComponent)
-        // Pastikan Anda punya gambar 'login_bg.jpg' di folder img, atau ganti namanya
-        BackgroundPanel bgPanel = new BackgroundPanel("img/main.jpg"); 
-        bgPanel.setLayout(new GridBagLayout()); // Gunakan GridBag untuk menengahkan panel login
+        BackgroundPanel bgPanel = new BackgroundPanel("img/main.jpg");
+        bgPanel.setLayout(new GridBagLayout());
 
-        // 2. Buat Panel Login (Panel Depan)
-        JPanel panelLogin = new JPanel();
-        panelLogin.setLayout(new GridBagLayout());
-        // Warna Putih dengan Alpha 200 (Semi-Transparan: 0-255)
-        panelLogin.setBackground(new Color(255, 255, 255, 220)); 
-        panelLogin.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.BLACK, 1),
-                BorderFactory.createEmptyBorder(20, 20, 20, 20) // Padding dalam
-        ));
+        GlassPanel loginCard = new GlassPanel();
+        loginCard.setLayout(new GridBagLayout());
+        loginCard.setPreferredSize(new Dimension(400, 500));
 
-        // Menyusun komponen ke dalam Panel Login
         GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(5, 5, 5, 5);
-        g.anchor = GridBagConstraints.WEST;
+        g.insets = new Insets(10, 20, 10, 20);
+        g.fill = GridBagConstraints.HORIZONTAL;
 
-        // Judul Form
-        JLabel lblTitle = new JLabel("USER LOGIN");
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 16));
-        lblTitle.setForeground(new Color(0, 50, 100));
-        g.gridx = 0; g.gridy = 0; g.gridwidth = 2; 
-        g.anchor = GridBagConstraints.CENTER;
-        panelLogin.add(lblTitle, g);
-
-        // Reset width & anchor untuk input
-        g.gridwidth = 1; g.anchor = GridBagConstraints.WEST;
-
-        // Input User
-        g.gridx = 0; g.gridy = 1; panelLogin.add(new JLabel("Username:"), g);
-        g.gridx = 1; panelLogin.add(txtUser, g);
-
-        // Input Pass
-        g.gridx = 0; g.gridy = 2; panelLogin.add(new JLabel("Password:"), g);
-        g.gridx = 1; panelLogin.add(txtPass, g);
-
-        // Tombol
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-        btnPanel.setOpaque(false); // Agar warna panelLogin tembus
+        JLabel lblTitle = new JLabel("AutoAAR");
+        lblTitle.setFont(new Font("Serif", Font.BOLD, 40));
+        lblTitle.setForeground(Color.WHITE); 
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
         
-        JButton bLog = new JButton("LOGIN");
-        bLog.setBackground(new Color(0, 100, 200));
-        bLog.setForeground(Color.WHITE);
-        bLog.addActionListener(e -> login());
+        JLabel lblSubtitle = new JLabel("PREMIUM SHOWROOM");
+        lblSubtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        lblSubtitle.setForeground(new Color(200, 200, 200)); 
+        lblSubtitle.setHorizontalAlignment(SwingConstants.CENTER);
+        lblSubtitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
 
-        JButton bReg = new JButton("REGISTER");
-        bReg.setBackground(new Color(50, 50, 50));
-        bReg.setForeground(Color.WHITE);
-        bReg.addActionListener(e -> new RegisterDialog(this));
+        g.gridx = 0; g.gridy = 0; loginCard.add(lblTitle, g);
+        g.gridy = 1; loginCard.add(lblSubtitle, g);
 
-        btnPanel.add(bLog);
-        btnPanel.add(bReg);
+        g.gridy = 2; loginCard.add(createLabel("USERNAME"), g);
+        txtUser = new JTextField(20);
+        styleField(txtUser); 
+        g.gridy = 3; loginCard.add(txtUser, g);
 
-        g.gridx = 0; g.gridy = 3; g.gridwidth = 2; g.anchor = GridBagConstraints.CENTER;
-        g.insets = new Insets(15, 5, 5, 5); // Jarak lebih besar ke tombol
-        panelLogin.add(btnPanel, g);
+        g.gridy = 4; g.insets = new Insets(20, 20, 10, 20);
+        loginCard.add(createLabel("PASSWORD"), g);
+        txtPass = new JPasswordField(20);
+        styleField(txtPass);
+        g.gridy = 5; g.insets = new Insets(10, 20, 30, 20);
+        loginCard.add(txtPass, g);
+        
+        KeyAdapter enterKey = new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) { if(e.getKeyCode() == KeyEvent.VK_ENTER) login(); }
+        };
+        txtUser.addKeyListener(enterKey); txtPass.addKeyListener(enterKey);
 
-        // 3. Masukkan Panel Login ke dalam Panel Background
-        bgPanel.add(panelLogin);
+        ModernButton btnLogin = new ModernButton("LOGIN", new Color(0, 120, 255));
+        btnLogin.setPreferredSize(new Dimension(200, 50));
+        btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btnLogin.addActionListener(e -> login());
+        
+        g.gridy = 6; g.insets = new Insets(0, 20, 15, 20);
+        loginCard.add(btnLogin, g);
 
-        // 4. Set ContentPane JFrame menjadi bgPanel
+        ModernButton btnRegister = new ModernButton("CREATE ACCOUNT", new Color(100, 100, 100));
+        btnRegister.setForeground(Color.WHITE);
+        btnRegister.setPreferredSize(new Dimension(200, 40));
+        btnRegister.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnRegister.addActionListener(e -> new RegisterDialog(this));
+        g.gridy = 7; loginCard.add(btnRegister, g);
+
+        bgPanel.add(loginCard);
         setContentPane(bgPanel);
         setVisible(true);
     }
 
     private void login() {
+        String user = txtUser.getText();
+        String pass = new String(txtPass.getPassword());
+        if (user.isEmpty() || pass.isEmpty()) { JOptionPane.showMessageDialog(this, "Empty fields!"); return; }
         try {
             Connection conn = KoneksiDB.configDB();
             PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE username=? AND password=?");
-            ps.setString(1, txtUser.getText());
-            ps.setString(2, new String(txtPass.getPassword()));
+            ps.setString(1, user); ps.setString(2, pass);
             ResultSet rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                new AppNavigationFrame(rs.getString("username")); // Pindah ke menu utama
-                dispose(); // Tutup login
-            } else {
-                JOptionPane.showMessageDialog(this, "Invalid Username or Password!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage());
+            if (rs.next()) { new AppNavigationFrame(rs.getString("username")); dispose(); } 
+            else { JOptionPane.showMessageDialog(this, "Invalid Login!"); }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(new Color(200, 200, 200)); 
+        return lbl;
+    }
+
+    private void styleField(JTextField field) {
+        field.setBackground(new Color(255, 255, 255, 200)); 
+        field.setOpaque(true); 
+        field.setForeground(Color.BLACK); 
+        field.setCaretColor(Color.BLACK); 
+        field.setFont(new Font("Segoe UI", Font.BOLD, 16)); 
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(150, 150, 150)),
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+    }
+
+    class BackgroundPanel extends JPanel {
+        private Image bg;
+        public BackgroundPanel(String path) { try { bg = new ImageIcon(path).getImage(); } catch(Exception e){} }
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if(bg!=null) { g.drawImage(bg, 0, 0, getWidth(), getHeight(), this); g.setColor(new Color(0, 0, 0, 100)); g.fillRect(0, 0, getWidth(), getHeight()); }
         }
     }
 
-    // --- INNER CLASS UNTUK BACKGROUND ---
-    class BackgroundPanel extends JPanel {
-        private Image bgImage;
-
-        public BackgroundPanel(String imagePath) {
-            try {
-                bgImage = new ImageIcon(imagePath).getImage();
-            } catch (Exception e) {
-                System.err.println("Gambar tidak ditemukan: " + imagePath);
-            }
-        }
-
-        @Override
+    class GlassPanel extends JPanel {
+        public GlassPanel() { setOpaque(false); }
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (bgImage != null) {
-                // Gambar akan di-stretch memenuhi panel
-                g.drawImage(bgImage, 0, 0, getWidth(), getHeight(), this);
-            } else {
-                // Warna cadangan jika gambar gagal load
-                g.setColor(Color.LIGHT_GRAY);
-                g.fillRect(0, 0, getWidth(), getHeight());
-            }
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(new Color(0, 0, 0, 150)); 
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
+            g2.setColor(new Color(255, 255, 255, 30));
+            g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 40, 40);
+            g2.dispose();
         }
     }
 }

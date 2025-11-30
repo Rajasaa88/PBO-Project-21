@@ -1,6 +1,5 @@
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.sql.*;
 import java.text.NumberFormat;
@@ -12,7 +11,10 @@ public class AppNavigationFrame extends JFrame {
     private JPanel mainPanel, modelContainer;
     private String currentUser, selectedBrand, selectedTier;
     
+    private JLabel lblPageTitle; // Variabel judul halaman
     private ThreadGifPanel slideshowPanel;
+    private JLayeredPane globalLayer;
+    private JPanel headerPanel;
 
     public AppNavigationFrame(String user) {
         this.currentUser = user;
@@ -21,184 +23,134 @@ public class AppNavigationFrame extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE); 
         setLocationRelativeTo(null);
 
-        // --- HEADER ---
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(20, 20, 20)); 
-        header.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        globalLayer = new JLayeredPane();
+        setLayout(new BorderLayout());
+        add(globalLayer, BorderLayout.CENTER);
 
-        JLabel lblUser = new JLabel("Logged in as: " + user.toUpperCase());
-        lblUser.setForeground(Color.LIGHT_GRAY);
-        lblUser.setFont(new Font("Arial", Font.BOLD, 14));
+        headerPanel = createHeader(user);
         
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        btnPanel.setOpaque(false);
-
-        ModernButton btnMonitor = new ModernButton("LIVE MONITOR", new Color(0, 100, 200));
-        btnMonitor.setPreferredSize(new Dimension(140, 35));
-        btnMonitor.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnMonitor.addActionListener(e -> new MonitorDialog(this));
-
-        ModernButton btnLogout = new ModernButton("LOGOUT", new Color(200, 50, 50));
-        btnLogout.setPreferredSize(new Dimension(100, 35));
-        btnLogout.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnLogout.addActionListener(e -> {
-            if (JOptionPane.showConfirmDialog(this, "Logout?", "Confirm", JOptionPane.YES_NO_OPTION) == 0) {
-                new LoginFrame(); dispose();
-            }
-        });
-
-        btnPanel.add(btnMonitor);
-        btnPanel.add(btnLogout);
-        header.add(lblUser, BorderLayout.WEST);
-        header.add(btnPanel, BorderLayout.EAST);
-        add(header, BorderLayout.NORTH);
-
-        // --- MAIN CONTENT ---
         cards = new CardLayout();
         mainPanel = new JPanel(cards); 
         mainPanel.setBackground(Color.BLACK); 
         
         initPages(); 
-        add(mainPanel, BorderLayout.CENTER);
         
+        globalLayer.add(mainPanel, Integer.valueOf(0));
+        globalLayer.add(headerPanel, Integer.valueOf(1));
+
+        addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent e) {
+                int w = getWidth(); int h = getHeight();
+                mainPanel.setBounds(0, 0, w, h);
+                headerPanel.setBounds(0, 0, w, 70); 
+                globalLayer.revalidate();
+            }
+        });
+
         cards.show(mainPanel, "BRAND");
         setVisible(true);
     }
 
+    private JPanel createHeader(String user) {
+        JPanel h = new JPanel(new BorderLayout());
+        h.setOpaque(false); h.setBorder(BorderFactory.createEmptyBorder(15, 25, 10, 25)); 
+        JLabel lblUser = new JLabel("Logged in as: " + user.toUpperCase());
+        lblUser.setForeground(new Color(220, 220, 220)); lblUser.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0)); btnPanel.setOpaque(false);
+        ModernButton btnMonitor = new ModernButton("LIVE MONITOR", new Color(0, 100, 200));
+        btnMonitor.setPreferredSize(new Dimension(130, 35)); btnMonitor.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        btnMonitor.addActionListener(e -> new MonitorDialog(this));
+        ModernButton btnLogout = new ModernButton("LOGOUT", new Color(200, 50, 50));
+        btnLogout.setPreferredSize(new Dimension(90, 35)); btnLogout.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        btnLogout.addActionListener(e -> { if (JOptionPane.showConfirmDialog(this, "Logout?", "Confirm", 0) == 0) { new LoginFrame(); dispose(); } });
+        btnPanel.add(btnMonitor); btnPanel.add(btnLogout);
+        h.add(lblUser, BorderLayout.WEST); h.add(btnPanel, BorderLayout.EAST);
+        return h;
+    }
+
     private void initPages() {
         // --- PAGE 1: BRAND ---
-        JPanel pBrand = new JPanel(new BorderLayout()); 
-        pBrand.setBackground(Color.BLACK); 
-        
-        ImagePanel welcomePanel = new ImagePanel("img/main.jpg"); 
-        welcomePanel.setLayout(new GridBagLayout()); 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0; gbc.gridy = 0; gbc.insets = new Insets(10, 10, 10, 10); 
-        gbc.anchor = GridBagConstraints.CENTER; 
-
-        JLabel lblTitle = new JLabel("Welcome to AutoAAR");
-        lblTitle.setFont(new Font("Serif", Font.BOLD, 48)); 
-        lblTitle.setForeground(Color.WHITE); 
-        
-        JLabel lblDesc = new JLabel("<html><center>Speed, Luxury, and Prestige.</center></html>", SwingConstants.CENTER); 
-        lblDesc.setFont(new Font("SansSerif", Font.PLAIN, 18));
-        lblDesc.setForeground(Color.WHITE); 
-
-        welcomePanel.add(lblTitle, gbc);
-        gbc.gridy = 1; welcomePanel.add(lblDesc, gbc);
+        JPanel pBrand = new JPanel(new BorderLayout()); pBrand.setBackground(Color.BLACK); 
+        ImagePanel welcomePanel = new ImagePanel("img/main.jpg"); welcomePanel.setLayout(new GridBagLayout()); 
+        GridBagConstraints gbc = new GridBagConstraints(); gbc.gridx = 0; gbc.gridy = 0; gbc.insets = new Insets(60, 10, 10, 10); 
+        JLabel lblTitle = new JLabel("Welcome to AutoAAR"); lblTitle.setFont(new Font("Serif", Font.BOLD, 48)); lblTitle.setForeground(Color.WHITE); 
+        JLabel lblDesc = new JLabel("<html><center>Speed, Luxury, and Prestige.</center></html>", 0); lblDesc.setFont(new Font("SansSerif", Font.PLAIN, 18)); lblDesc.setForeground(Color.WHITE); 
+        welcomePanel.add(lblTitle, gbc); gbc.gridy = 1; gbc.insets = new Insets(10, 10, 10, 10); welcomePanel.add(lblDesc, gbc);
         pBrand.add(welcomePanel, BorderLayout.NORTH);
 
-        JPanel gridBrand = new JPanel(new GridLayout(0, 3, 40, 40)); 
-        gridBrand.setBackground(Color.BLACK);
-        gridBrand.setBorder(BorderFactory.createEmptyBorder(30, 50, 50, 50));
-        
+        JPanel gridBrand = new JPanel(new GridLayout(0, 3, 40, 40)); gridBrand.setBackground(Color.BLACK); gridBrand.setBorder(BorderFactory.createEmptyBorder(30, 50, 50, 50));
         try {
             Connection conn = KoneksiDB.configDB();
-            if(conn!=null) {
-                ResultSet rs = conn.createStatement().executeQuery("SELECT DISTINCT brand FROM cars ORDER BY brand");
-                while(rs.next()) {
-                    String b = rs.getString("brand");
-                    ModernButton btn = createBtn(b, "img/"+b+".png", 180, 180); 
-                    btn.addActionListener(e -> { 
-                        selectedBrand = b; 
-                        if(slideshowPanel != null) slideshowPanel.startSlideshow(b);
-                        cards.show(mainPanel, "TIER"); 
-                    });
-                    gridBrand.add(btn);
-                }
+            ResultSet rs = conn.createStatement().executeQuery("SELECT DISTINCT brand FROM cars ORDER BY brand");
+            while(rs.next()) {
+                String b = rs.getString("brand");
+                ModernButton btn = createBtn(b, "img/"+b+".png", 180, 180); 
+                btn.addActionListener(e -> { selectedBrand = b; if(slideshowPanel != null) slideshowPanel.startSlideshow(b); cards.show(mainPanel, "TIER"); });
+                gridBrand.add(btn);
             }
         } catch(Exception e) {}
-        
-        // --- UPDATE: Scroll Pane Invisible Tapi Cepat ---
-        JScrollPane scrollBrand = new JScrollPane(gridBrand);
-        scrollBrand.setBorder(null); // Hapus garis pinggir
-        scrollBrand.getViewport().setBackground(Color.BLACK);
-        
-        // 1. Sembunyikan Bar (Invisible) tapi mouse wheel tetap jalan
-        scrollBrand.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        scrollBrand.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        // 2. Naikkan kecepatan scroll jadi 20 (biar ngebut/halus)
-        scrollBrand.getVerticalScrollBar().setUnitIncrement(20);
-        
+        JScrollPane scrollBrand = new JScrollPane(gridBrand); scrollBrand.setBorder(null); scrollBrand.getViewport().setBackground(Color.BLACK);
+        scrollBrand.setVerticalScrollBarPolicy(21); scrollBrand.setHorizontalScrollBarPolicy(31); scrollBrand.getVerticalScrollBar().setUnitIncrement(20);
         pBrand.add(scrollBrand, BorderLayout.CENTER);
         mainPanel.add(pBrand, "BRAND");
 
         // --- PAGE 2: TIER ---
-        JLayeredPane layerTier = new JLayeredPane();
-        slideshowPanel = new ThreadGifPanel();
-        slideshowPanel.setBounds(0, 0, 1000, 850); 
+        JPanel tierPanel = new JPanel(); tierPanel.setLayout(new OverlayLayout(tierPanel));
+        slideshowPanel = new ThreadGifPanel(); slideshowPanel.setAlignmentX(0.5f); slideshowPanel.setAlignmentY(0.5f);
+        JPanel pTierButtons = new JPanel(new GridBagLayout()); pTierButtons.setOpaque(false); pTierButtons.setAlignmentX(0.5f); pTierButtons.setAlignmentY(0.5f);
         
-        JPanel pTierButtons = new JPanel(new GridBagLayout()); 
-        pTierButtons.setOpaque(false); 
-        pTierButtons.setBounds(0, 0, 1000, 850);
-        
-        layerTier.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                int w = layerTier.getWidth(); int h = layerTier.getHeight();
-                slideshowPanel.setBounds(0, 0, w, h);
-                pTierButtons.setBounds(0, 0, w, h);
-            }
-        });
-
-        ModernButton b1 = new ModernButton("SUPERCAR", new Color(0, 190, 255));
-        b1.setPreferredSize(new Dimension(280, 80));
-        b1.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        ModernButton b1 = new ModernButton("SUPERCAR", new Color(0, 190, 255)); b1.setPreferredSize(new Dimension(280, 80)); b1.setFont(new Font("Segoe UI", Font.BOLD, 24));
         b1.addActionListener(e->{ selectedTier="Supercar"; loadModels(); cards.show(mainPanel, "MODEL"); });
-        
-        ModernButton b2 = new ModernButton("HYPERCAR", new Color(255, 0, 80));
-        b2.setPreferredSize(new Dimension(280, 80));
-        b2.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        ModernButton b2 = new ModernButton("HYPERCAR", new Color(255, 0, 80)); b2.setPreferredSize(new Dimension(280, 80)); b2.setFont(new Font("Segoe UI", Font.BOLD, 24));
         b2.addActionListener(e->{ selectedTier="Hypercar"; loadModels(); cards.show(mainPanel, "MODEL"); });
+        ModernButton bBack = new ModernButton("BACK", new Color(100, 100, 100)); bBack.setPreferredSize(new Dimension(150, 50)); bBack.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        bBack.addActionListener(e->{ slideshowPanel.stopSlideshow(); cards.show(mainPanel,"BRAND"); });
         
-        ModernButton bBack = new ModernButton("BACK", new Color(100, 100, 100));
-        bBack.setPreferredSize(new Dimension(150, 50)); 
-        bBack.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        bBack.addActionListener(e->{
-            slideshowPanel.stopSlideshow();
-            cards.show(mainPanel,"BRAND");
-        });
-        
-        GridBagConstraints g = new GridBagConstraints(); 
-        g.insets=new Insets(20,20,20,20);
-        pTierButtons.add(b1,g); g.gridx=1; pTierButtons.add(b2,g); 
-        g.gridy=1; g.gridwidth=2; g.insets=new Insets(50,20,20,20);
-        pTierButtons.add(bBack,g);
-        
-        layerTier.add(slideshowPanel, Integer.valueOf(0));
-        layerTier.add(pTierButtons, Integer.valueOf(1));
-        mainPanel.add(layerTier, "TIER");
+        GridBagConstraints g = new GridBagConstraints(); g.insets=new Insets(20,20,20,20);
+        pTierButtons.add(b1,g); g.gridx=1; pTierButtons.add(b2,g); g.gridy=1; g.gridwidth=2; g.insets=new Insets(50,20,20,20); pTierButtons.add(bBack,g);
+        tierPanel.add(pTierButtons); tierPanel.add(slideshowPanel);
+        mainPanel.add(tierPanel, "TIER");
 
         // --- PAGE 3: MODEL ---
         JPanel pModel = new JPanel(new BorderLayout()); 
         pModel.setBackground(Color.BLACK);
         
-        JPanel pHeaderModel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel pHeaderModel = new JPanel(new BorderLayout());
         pHeaderModel.setBackground(Color.BLACK);
+        pHeaderModel.setBorder(BorderFactory.createEmptyBorder(80, 30, 20, 30)); 
+
         ModernButton bBackModel = new ModernButton("BACK", new Color(100, 100, 100));
-        bBackModel.setPreferredSize(new Dimension(120, 40));
-        bBackModel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        bBackModel.setPreferredSize(new Dimension(100, 40));
+        bBackModel.setFont(new Font("Segoe UI", Font.BOLD, 12));
         bBackModel.addActionListener(e->cards.show(mainPanel,"TIER"));
-        pHeaderModel.add(bBackModel);
+
+        lblPageTitle = new JLabel("AVAILABLE MODELS");
+        lblPageTitle.setFont(new Font("Serif", Font.BOLD, 30));
+        lblPageTitle.setForeground(Color.WHITE);
+        lblPageTitle.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        pHeaderModel.add(bBackModel, BorderLayout.WEST);
+        pHeaderModel.add(lblPageTitle, BorderLayout.EAST);
         pModel.add(pHeaderModel, BorderLayout.NORTH);
         
-        modelContainer = new JPanel(new GridLayout(0,2,20,20)); 
+        modelContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 30)); 
         modelContainer.setBackground(Color.BLACK);
-        
-        // Scrollbar Page Model juga dipercepat, tapi Bar-nya dibiarkan terlihat (kecuali mau dihidden juga)
+        modelContainer.setPreferredSize(new Dimension(950, 3000)); // Height diperbesar agar scroll aman
+
         JScrollPane scrollModel = new JScrollPane(modelContainer);
         scrollModel.setBorder(null);
         scrollModel.getViewport().setBackground(Color.BLACK);
-        scrollModel.getVerticalScrollBar().setUnitIncrement(20); // Sama-sama cepat 20
-        pModel.add(scrollModel, BorderLayout.CENTER);
+        scrollModel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        scrollModel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollModel.getVerticalScrollBar().setUnitIncrement(25);
         
+        pModel.add(scrollModel, BorderLayout.CENTER);
         mainPanel.add(pModel, "MODEL");
     }
 
     private void loadModels() {
         modelContainer.removeAll();
-        NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
+        lblPageTitle.setText(selectedBrand.toUpperCase() + " " + selectedTier.toUpperCase() + "S");
         try {
             Connection conn = KoneksiDB.configDB();
             PreparedStatement ps = conn.prepareStatement("SELECT * FROM cars WHERE brand=? AND tier=?");
@@ -210,39 +162,12 @@ public class AppNavigationFrame extends JFrame {
                 int id = rs.getInt("id"); String name = rs.getString("model_name");
                 double price = rs.getDouble("price"); int stock = rs.getInt("stock");
                 String img = rs.getString("image_file");
-
-                JPanel card = new JPanel(new BorderLayout()); 
-                card.setBackground(new Color(25, 25, 25)); 
-                card.setBorder(BorderFactory.createLineBorder(new Color(50, 50, 50)));
-
-                ModernButton btnImg = createBtn("", "img/"+img, 400, 250);
-                
-                String colorStock = stock > 0 ? "white" : "red";
-                String info = "<html><center><font color='white' size='4'>"+name+"</font><br>" +
-                              "<font color='yellow'>"+fmt.format(price)+"</font><br>" +
-                              "<font color='"+colorStock+"'>Stock: "+stock+"</font></center></html>";
-                
-                btnImg.addActionListener(e -> {
-                    if(stock>0) {
-                        Car c = selectedTier.equals("Hypercar") ? new Hypercar(id,selectedBrand,name,price) : new Supercar(id,selectedBrand,name,price);
-                        new PurchaseDialog(this, c, currentUser);
-                    } else JOptionPane.showMessageDialog(this, "SOLD OUT");
-                });
-
-                if(currentUser.equalsIgnoreCase("admin")) {
-                    ModernButton btnAdd = new ModernButton("[ADMIN] ADD STOCK (+)", new Color(0, 150, 0));
-                    btnAdd.setPreferredSize(new Dimension(200, 30));
-                    btnAdd.setFont(new Font("Arial", Font.BOLD, 12));
-                    btnAdd.addActionListener(ev -> updateStock(id));
-                    card.add(btnAdd, BorderLayout.NORTH);
-                }
-                card.add(btnImg, BorderLayout.CENTER);
-                card.add(new JLabel(info, SwingConstants.CENTER), BorderLayout.SOUTH);
-                modelContainer.add(card);
+                modelContainer.add(new CarCard(id, name, price, stock, img));
             }
             if(!found) {
                 JLabel empty = new JLabel("No models available.", SwingConstants.CENTER);
-                empty.setForeground(Color.WHITE); modelContainer.add(empty);
+                empty.setForeground(Color.GRAY); empty.setFont(new Font("Segoe UI", Font.ITALIC, 18));
+                modelContainer.add(empty);
             }
         } catch(Exception e) { e.printStackTrace(); }
         modelContainer.revalidate(); modelContainer.repaint();
@@ -250,51 +175,141 @@ public class AppNavigationFrame extends JFrame {
 
     private void updateStock(int id) {
         String in = JOptionPane.showInputDialog("Add amount:");
-        if(in!=null) {
-            try {
-                int qty = Integer.parseInt(in);
-                if(qty>0) {
-                    Connection conn = KoneksiDB.configDB();
-                    conn.createStatement().executeUpdate("UPDATE cars SET stock = stock + "+qty+" WHERE id="+id);
-                    loadModels();
-                }
-            } catch(Exception e) {}
-        }
+        if(in!=null) { try { int qty = Integer.parseInt(in); if(qty>0) { KoneksiDB.configDB().createStatement().executeUpdate("UPDATE cars SET stock = stock + "+qty+" WHERE id="+id); loadModels(); } } catch(Exception e) {} }
     }
 
     private ModernButton createBtn(String brandName, String path, int w, int h) {
         ModernButton btn = new ModernButton("", new Color(40, 40, 40)); 
-        btn.setHorizontalTextPosition(SwingConstants.CENTER);
-        btn.setVerticalTextPosition(SwingConstants.BOTTOM);
-        try {
-            File f = new File(path);
-            if (f.exists()) {
-                ImageIcon originalIcon = new ImageIcon(path);
-                Image scaledImage = originalIcon.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
-                btn.setIcon(new ImageIcon(scaledImage));
-                btn.setText(brandName.isEmpty() ? "" : brandName);
-            } else {
-                btn.setText("<html><center>"+brandName+"<br>(No Image)</center></html>");
-            }
-        } catch (Exception e) {
-            btn.setText(brandName);
-        }
+        btn.setHorizontalTextPosition(0); btn.setVerticalTextPosition(3);
+        try { File f = new File(path); if (f.exists()) { ImageIcon icon = new ImageIcon(path); btn.setIcon(new ImageIcon(icon.getImage().getScaledInstance(w, h, 4))); btn.setText(brandName.isEmpty()?"":brandName); } else btn.setText("<html><center>"+brandName+"<br>(No Image)</center></html>"); } catch (Exception e) { btn.setText(brandName); }
         return btn;
     }
 
     class ImagePanel extends JPanel {
-        private Image bgImage;
-        public ImagePanel(String imagePath) {
-            try { bgImage = new ImageIcon(imagePath).getImage(); } catch (Exception e) {}
+        private Image bg; public ImagePanel(String p) { try { bg = new ImageIcon(p).getImage(); } catch (Exception e) {} }
+        protected void paintComponent(Graphics g) { super.paintComponent(g); if (bg != null) { g.drawImage(bg, 0, 0, getWidth(), getHeight(), this); g.setColor(new Color(0, 0, 0, 180)); g.fillRect(0, 0, getWidth(), getHeight()); } else { g.setColor(Color.BLACK); g.fillRect(0, 0, getWidth(), getHeight()); } }
+    }
+
+    // --- CAR CARD (PORTRAIT MODE) ---
+    class CarCard extends JPanel {
+        private int carId; private String carName; private double carPrice; private int carStock; private Image carImage; private boolean isHover = false;
+
+        public CarCard(int id, String name, double price, int stock, String imgFile) {
+            this.carId = id; this.carName = name; this.carPrice = price; this.carStock = stock;
+            try { File f = new File("img/" + imgFile); if(f.exists()) carImage = new ImageIcon("img/" + imgFile).getImage(); } catch(Exception e){}
+            setLayout(new GridBagLayout()); setOpaque(false);
+            
+            // >>> UKURAN BARU: PORTRAIT (Tinggi 420, Lebar 320) <<<
+            setPreferredSize(new Dimension(320, 420)); 
+            
+            addMouseListener(new MouseAdapter() {
+                public void mouseEntered(MouseEvent e) { isHover = true; repaint(); }
+                public void mouseExited(MouseEvent e) { isHover = false; repaint(); }
+            });
+            initLayout();
         }
-        @Override
+
+        private void initLayout() {
+            GridBagConstraints g = new GridBagConstraints();
+            g.insets = new Insets(5, 10, 5, 10); 
+            g.fill = GridBagConstraints.HORIZONTAL; 
+            g.anchor = GridBagConstraints.CENTER;
+
+            // Space untuk gambar di bagian atas (lebih tinggi)
+            g.gridx = 0; g.gridy = 0; g.weighty = 1.0; 
+            add(Box.createVerticalStrut(200), g); // Space gambar diperbesar ke 200px
+
+            // Nama Mobil
+            JLabel lblName = new JLabel(carName.toUpperCase());
+            lblName.setFont(new Font("Segoe UI", Font.BOLD, 20)); 
+            lblName.setForeground(Color.WHITE); 
+            lblName.setHorizontalAlignment(SwingConstants.CENTER); // Center text
+            g.gridy = 1; g.weighty = 0; 
+            add(lblName, g);
+
+            // Harga
+            NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
+            JLabel lblPrice = new JLabel(fmt.format(carPrice));
+            lblPrice.setFont(new Font("Consolas", Font.BOLD, 16)); 
+            lblPrice.setForeground(new Color(255, 215, 0)); 
+            lblPrice.setHorizontalAlignment(SwingConstants.CENTER);
+            g.gridy = 2; 
+            add(lblPrice, g);
+
+            // Tombol & Stock Panel
+            JPanel bottomPanel = new JPanel(new BorderLayout()); 
+            bottomPanel.setOpaque(false);
+            
+            JLabel lblStock = new JLabel(carStock > 0 ? "Stock: " + carStock : "SOLD OUT");
+            lblStock.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            lblStock.setForeground(carStock > 0 ? new Color(0, 255, 100) : Color.RED);
+            
+            ModernButton btnBuy = new ModernButton(carStock > 0 ? "PURCHASE" : "EMPTY", carStock > 0 ? new Color(0, 100, 200) : new Color(100, 100, 100));
+            btnBuy.setPreferredSize(new Dimension(120, 35)); 
+            btnBuy.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            btnBuy.setEnabled(carStock > 0);
+            
+            btnBuy.addActionListener(e -> {
+                 Car c = selectedTier.equals("Hypercar") ? new Hypercar(carId,selectedBrand,carName,carPrice) : new Supercar(carId,selectedBrand,carName,carPrice);
+                 new PurchaseDialog(AppNavigationFrame.this, c, currentUser);
+            });
+
+            bottomPanel.add(lblStock, BorderLayout.WEST); 
+            bottomPanel.add(btnBuy, BorderLayout.EAST);
+            
+            g.gridy = 3; g.insets = new Insets(15, 10, 20, 10); 
+            add(bottomPanel, g);
+            
+            if(currentUser.equalsIgnoreCase("admin")) {
+                 ModernButton btnAdd = new ModernButton("+ STOCK", new Color(0, 150, 0));
+                 btnAdd.setPreferredSize(new Dimension(70, 25)); 
+                 btnAdd.setFont(new Font("Arial", Font.BOLD, 10));
+                 btnAdd.addActionListener(ev -> updateStock(carId));
+                 
+                 GridBagConstraints gAdmin = new GridBagConstraints();
+                 gAdmin.gridx=0; gAdmin.gridy=0; gAdmin.anchor=GridBagConstraints.NORTHEAST; gAdmin.insets=new Insets(10,10,0,10);
+                 add(btnAdd, gAdmin);
+            }
+        }
+
         protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (bgImage != null) {
-                g.drawImage(bgImage, 0, 0, getWidth(), getHeight(), this);
-                g.setColor(new Color(0, 0, 0, 180)); 
-                g.fillRect(0, 0, getWidth(), getHeight());
-            } else { g.setColor(Color.BLACK); g.fillRect(0, 0, getWidth(), getHeight()); }
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int w = getWidth(); int h = getHeight();
+            
+            // Background Kartu
+            g2.setColor(new Color(30, 30, 30, 230)); 
+            g2.fillRoundRect(0, 0, w, h, 25, 25);
+
+            // Gambar Mobil (Ukuran disesuaikan Portrait)
+            if (carImage != null) {
+                int imgH = 180; // Gambar lebih tinggi
+                int imgW = (int) ((double)carImage.getWidth(null) / carImage.getHeight(null) * imgH);
+                // Batasi lebar jika melebihi kartu
+                if(imgW > w - 20) {
+                    imgW = w - 20;
+                    imgH = (int) ((double)carImage.getHeight(null) / carImage.getWidth(null) * imgW);
+                }
+                
+                int imgX = (w - imgW) / 2;
+                int imgY = 20; // Padding atas
+                
+                g2.drawImage(carImage, imgX, imgY, imgW, imgH, this);
+            }
+
+            // Border Effect
+            if (isHover && carStock > 0) {
+                g2.setColor(selectedTier.equals("Hypercar") ? new Color(255, 0, 80) : new Color(0, 190, 255));
+                g2.setStroke(new BasicStroke(2f)); 
+                g2.drawRoundRect(1, 1, w-2, h-2, 25, 25);
+                
+                g2.setColor(new Color(255, 255, 255, 20)); 
+                g2.fillRoundRect(0, 0, w, h, 25, 25);
+            } else {
+                g2.setColor(new Color(60, 60, 60)); 
+                g2.drawRoundRect(0, 0, w-1, h-1, 25, 25);
+            }
+            g2.dispose();
         }
     }
 }
