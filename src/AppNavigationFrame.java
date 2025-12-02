@@ -192,14 +192,28 @@ public class AppNavigationFrame extends JFrame {
 
     // --- CAR CARD (PORTRAIT MODE) ---
     class CarCard extends JPanel {
-        private int carId; private String carName; private double carPrice; private int carStock; private Image carImage; private boolean isHover = false;
+        private int carId; 
+        private String carName; 
+        private double carPrice; 
+        private int carStock; 
+        private Image carImage; 
+        private boolean isHover = false;
 
         public CarCard(int id, String name, double price, int stock, String imgFile) {
-            this.carId = id; this.carName = name; this.carPrice = price; this.carStock = stock;
-            try { File f = new File("img/" + imgFile); if(f.exists()) carImage = new ImageIcon("img/" + imgFile).getImage(); } catch(Exception e){}
-            setLayout(new GridBagLayout()); setOpaque(false);
+            this.carId = id; 
+            this.carName = name; 
+            this.carPrice = price; 
+            this.carStock = stock;
             
-            // >>> UKURAN BARU: PORTRAIT (Tinggi 420, Lebar 320) <<<
+            try { 
+                File f = new File("img/" + imgFile); 
+                if(f.exists()) carImage = new ImageIcon("img/" + imgFile).getImage(); 
+            } catch(Exception e){}
+            
+            setLayout(new GridBagLayout()); 
+            setOpaque(false);
+            
+            // UKURAN KARTU
             setPreferredSize(new Dimension(320, 420)); 
             
             addMouseListener(new MouseAdapter() {
@@ -215,19 +229,19 @@ public class AppNavigationFrame extends JFrame {
             g.fill = GridBagConstraints.HORIZONTAL; 
             g.anchor = GridBagConstraints.CENTER;
 
-            // Space untuk gambar di bagian atas (lebih tinggi)
+            // 1. Space Gambar
             g.gridx = 0; g.gridy = 0; g.weighty = 1.0; 
-            add(Box.createVerticalStrut(200), g); // Space gambar diperbesar ke 200px
+            add(Box.createVerticalStrut(200), g);
 
-            // Nama Mobil
+            // 2. Nama Mobil
             JLabel lblName = new JLabel(carName.toUpperCase());
             lblName.setFont(new Font("Segoe UI", Font.BOLD, 20)); 
             lblName.setForeground(Color.WHITE); 
-            lblName.setHorizontalAlignment(SwingConstants.CENTER); // Center text
+            lblName.setHorizontalAlignment(SwingConstants.CENTER);
             g.gridy = 1; g.weighty = 0; 
             add(lblName, g);
 
-            // Harga
+            // 3. Harga
             NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
             JLabel lblPrice = new JLabel(fmt.format(carPrice));
             lblPrice.setFont(new Font("Consolas", Font.BOLD, 16)); 
@@ -236,7 +250,7 @@ public class AppNavigationFrame extends JFrame {
             g.gridy = 2; 
             add(lblPrice, g);
 
-            // Tombol & Stock Panel
+            // 4. Panel Bawah (Stok & Tombol Beli)
             JPanel bottomPanel = new JPanel(new BorderLayout()); 
             bottomPanel.setOpaque(false);
             
@@ -244,15 +258,32 @@ public class AppNavigationFrame extends JFrame {
             lblStock.setFont(new Font("Segoe UI", Font.BOLD, 12));
             lblStock.setForeground(carStock > 0 ? new Color(0, 255, 100) : Color.RED);
             
-            ModernButton btnBuy = new ModernButton(carStock > 0 ? "PURCHASE" : "EMPTY", carStock > 0 ? new Color(0, 100, 200) : new Color(100, 100, 100));
+            // --- LOGIKA TOMBOL BELI (MODIFIKASI DI SINI) ---
+            ModernButton btnBuy;
+            
+            if (currentUser.equalsIgnoreCase("admin")) {
+                // A. JIKA ADMIN: Tombol MATI & Teks "ADMIN VIEW"
+                btnBuy = new ModernButton("ADMIN VIEW", new Color(80, 80, 80)); // Warna Abu Gelap
+                btnBuy.setEnabled(false); // Tidak bisa diklik
+                btnBuy.setToolTipText("Admin cannot purchase cars.");
+            } else {
+                // B. JIKA CUSTOMER: Tombol Normal
+                if (carStock > 0) {
+                    btnBuy = new ModernButton("PURCHASE", new Color(0, 100, 200));
+                } else {
+                    btnBuy = new ModernButton("EMPTY", new Color(100, 100, 100));
+                    btnBuy.setEnabled(false);
+                }
+                
+                // Aksi Beli (Hanya jalan untuk Customer)
+                btnBuy.addActionListener(e -> {
+                     Car c = selectedTier.equals("Hypercar") ? new Hypercar(carId,selectedBrand,carName,carPrice) : new Supercar(carId,selectedBrand,carName,carPrice);
+                     new PurchaseDialog(AppNavigationFrame.this, c, currentUser);
+                });
+            }
+
             btnBuy.setPreferredSize(new Dimension(120, 35)); 
             btnBuy.setFont(new Font("Segoe UI", Font.BOLD, 12));
-            btnBuy.setEnabled(carStock > 0);
-            
-            btnBuy.addActionListener(e -> {
-                 Car c = selectedTier.equals("Hypercar") ? new Hypercar(carId,selectedBrand,carName,carPrice) : new Supercar(carId,selectedBrand,carName,carPrice);
-                 new PurchaseDialog(AppNavigationFrame.this, c, currentUser);
-            });
 
             bottomPanel.add(lblStock, BorderLayout.WEST); 
             bottomPanel.add(btnBuy, BorderLayout.EAST);
@@ -260,6 +291,7 @@ public class AppNavigationFrame extends JFrame {
             g.gridy = 3; g.insets = new Insets(15, 10, 20, 10); 
             add(bottomPanel, g);
             
+            // 5. Tombol Tambah Stok (KHUSUS ADMIN TETAP ADA)
             if(currentUser.equalsIgnoreCase("admin")) {
                  ModernButton btnAdd = new ModernButton("+ STOCK", new Color(0, 150, 0));
                  btnAdd.setPreferredSize(new Dimension(70, 25)); 
@@ -281,24 +313,23 @@ public class AppNavigationFrame extends JFrame {
             g2.setColor(new Color(30, 30, 30, 230)); 
             g2.fillRoundRect(0, 0, w, h, 25, 25);
 
-            // Gambar Mobil (Ukuran disesuaikan Portrait)
+            // Gambar Mobil
             if (carImage != null) {
-                int imgH = 180; // Gambar lebih tinggi
+                int imgH = 180; 
                 int imgW = (int) ((double)carImage.getWidth(null) / carImage.getHeight(null) * imgH);
-                // Batasi lebar jika melebihi kartu
                 if(imgW > w - 20) {
                     imgW = w - 20;
                     imgH = (int) ((double)carImage.getHeight(null) / carImage.getWidth(null) * imgW);
                 }
-                
                 int imgX = (w - imgW) / 2;
-                int imgY = 20; // Padding atas
-                
+                int imgY = 20;
                 g2.drawImage(carImage, imgX, imgY, imgW, imgH, this);
             }
 
-            // Border Effect
-            if (isHover && carStock > 0) {
+            // Border Effect (Hanya menyala kalau user BUKAN admin dan stok ada)
+            boolean canBuy = !currentUser.equalsIgnoreCase("admin") && carStock > 0;
+            
+            if (isHover && canBuy) {
                 g2.setColor(selectedTier.equals("Hypercar") ? new Color(255, 0, 80) : new Color(0, 190, 255));
                 g2.setStroke(new BasicStroke(2f)); 
                 g2.drawRoundRect(1, 1, w-2, h-2, 25, 25);
