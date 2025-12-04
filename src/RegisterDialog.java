@@ -9,32 +9,47 @@ public class RegisterDialog extends JDialog {
 
     public RegisterDialog(JFrame parent) {
         super(parent, "Register", true);
-        // UKURAN DIPERKECIL (Lebih ramping)
-        setSize(400, 580);
-        setLocationRelativeTo(parent);
         
-        BackgroundPanel bgPanel = new BackgroundPanel("img/main.jpg");
-        bgPanel.setLayout(new GridBagLayout());
+        // --- 1. FULL SCREEN SETUP FOR JDIALOG ---
+        setUndecorated(true); // Hilangkan bingkai window
+        
+        // Ambil ukuran layar user
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setSize(screenSize.width, screenSize.height);
+        setLocation(0, 0); // Paksa posisi di pojok kiri atas
 
+        // --- 2. ESC KEY TO CANCEL/CLOSE ---
+        KeyStroke escKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escKey, "CLOSE_DIALOG");
+        getRootPane().getActionMap().put("CLOSE_DIALOG", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose(); // Tutup dialog, kembali ke LoginFrame
+            }
+        });
+        
+        // --- 3. LAYOUT SETUP ---
+        BackgroundPanel bgPanel = new BackgroundPanel("img/main.jpg");
+        bgPanel.setLayout(new GridBagLayout()); // Center Alignment
+
+        // Glass Card (Panel Form di Tengah)
         GlassPanel card = new GlassPanel();
         card.setLayout(new GridBagLayout());
-        // Ukuran Card disesuaikan agar pas di window kecil
-        card.setPreferredSize(new Dimension(340, 480));
+        card.setPreferredSize(new Dimension(400, 580)); // Ukuran form tetap proporsional
 
         GridBagConstraints g = new GridBagConstraints();
-        g.insets = new Insets(5, 15, 5, 15); // Margin kiri-kanan diperkecil
+        g.insets = new Insets(5, 15, 5, 15); 
         g.fill = GridBagConstraints.HORIZONTAL;
 
         // --- HEADER ---
-        // TEKS DIUBAH: AUTOAAR -> AutoAAR
         JLabel lblTitle = new JLabel("JOIN AutoAAR"); 
-        lblTitle.setFont(new Font("Serif", Font.BOLD, 28)); // Font sedikit diperkecil
+        lblTitle.setFont(new Font("Serif", Font.BOLD, 32)); 
         lblTitle.setForeground(Color.WHITE); 
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
         g.gridx = 0; g.gridy = 0; card.add(lblTitle, g);
 
         JLabel lblSubtitle = new JLabel("CREATE YOUR ACCOUNT");
-        lblSubtitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        lblSubtitle.setFont(new Font("SansSerif", Font.PLAIN, 11));
         lblSubtitle.setForeground(new Color(200, 200, 200));
         lblSubtitle.setHorizontalAlignment(SwingConstants.CENTER);
         lblSubtitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
@@ -42,33 +57,33 @@ public class RegisterDialog extends JDialog {
 
         // --- FORM INPUTS ---
         
-        // 1. Username
+        // Username
         g.gridy = 2; card.add(createLabel("USERNAME"), g);
         txtUser = new JTextField(15);
         styleField(txtUser);
         g.gridy = 3; card.add(txtUser, g);
 
-        // 2. Password
-        g.gridy = 4; g.insets = new Insets(10, 15, 5, 15); // Jarak antar field dirapatkan
+        // Password
+        g.gridy = 4; g.insets = new Insets(15, 15, 5, 15); 
         card.add(createLabel("PASSWORD"), g);
         txtPass = new JPasswordField(15);
         styleField(txtPass);
         g.gridy = 5; g.insets = new Insets(5, 15, 5, 15);
         card.add(txtPass, g);
 
-        // 3. Confirm Password
-        g.gridy = 6; g.insets = new Insets(10, 15, 5, 15);
+        // Confirm Password
+        g.gridy = 6; g.insets = new Insets(15, 15, 5, 15);
         card.add(createLabel("CONFIRM PASSWORD"), g);
         txtPassConf = new JPasswordField(15);
         styleField(txtPassConf);
-        g.gridy = 7; g.insets = new Insets(5, 15, 15, 15);
+        g.gridy = 7; g.insets = new Insets(5, 15, 25, 15);
         card.add(txtPassConf, g);
 
         // --- TOMBOL ---
         
         // Register Button
         ModernButton btnReg = new ModernButton("REGISTER NOW", new Color(0, 180, 100));
-        btnReg.setPreferredSize(new Dimension(180, 40)); // Ukuran tombol disesuaikan
+        btnReg.setPreferredSize(new Dimension(180, 45)); 
         btnReg.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnReg.addActionListener(e -> register());
         
@@ -76,8 +91,8 @@ public class RegisterDialog extends JDialog {
         card.add(btnReg, g);
 
         // Cancel Button
-        ModernButton btnCancel = new ModernButton("CANCEL", new Color(200, 50, 50));
-        btnCancel.setPreferredSize(new Dimension(180, 35));
+        ModernButton btnCancel = new ModernButton("CANCEL / ESC", new Color(200, 50, 50));
+        btnCancel.setPreferredSize(new Dimension(180, 40));
         btnCancel.setFont(new Font("Segoe UI", Font.BOLD, 11));
         btnCancel.addActionListener(e -> dispose());
         
@@ -122,7 +137,7 @@ public class RegisterDialog extends JDialog {
 
     private JLabel createLabel(String text) {
         JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 11)); // Font label diperkecil sedikit
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 11)); 
         lbl.setForeground(new Color(200, 200, 200)); 
         return lbl;
     }
@@ -137,7 +152,7 @@ public class RegisterDialog extends JDialog {
         
         field.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(150, 150, 150)),
-            BorderFactory.createEmptyBorder(3, 5, 3, 5) // Padding diperkecil
+            BorderFactory.createEmptyBorder(5, 5, 5, 5) 
         ));
 
         field.addFocusListener(new FocusListener() {
@@ -145,14 +160,14 @@ public class RegisterDialog extends JDialog {
             public void focusGained(FocusEvent e) {
                 field.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0, 150, 255)), 
-                    BorderFactory.createEmptyBorder(3, 5, 3, 5)
+                    BorderFactory.createEmptyBorder(5, 5, 5, 5)
                 ));
             }
             @Override
             public void focusLost(FocusEvent e) {
                 field.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(150, 150, 150)),
-                    BorderFactory.createEmptyBorder(3, 5, 3, 5)
+                    BorderFactory.createEmptyBorder(5, 5, 5, 5)
                 ));
             }
         });
@@ -188,7 +203,7 @@ public class RegisterDialog extends JDialog {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
             g2.setColor(new Color(0, 0, 0, 150)); 
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30); // Radius sudut diperkecil dikit
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
             
             g2.setColor(new Color(255, 255, 255, 30));
             g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 30, 30);
