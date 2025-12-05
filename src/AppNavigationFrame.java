@@ -21,13 +21,11 @@ public class AppNavigationFrame extends JFrame {
         this.currentUser = user;
         setTitle("AutoAAR - User: " + user);
         
-        // --- 1. FULL SCREEN SETUP ---
-        setUndecorated(true); // Hilangkan Title Bar
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Full Screen
+        setUndecorated(true);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(EXIT_ON_CLOSE); 
         setLocationRelativeTo(null);
 
-        // --- 2. ESC KEY TO EXIT APP ---
         KeyStroke escKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escKey, "EXIT_APP");
         getRootPane().getActionMap().put("EXIT_APP", new AbstractAction() {
@@ -41,18 +39,14 @@ public class AppNavigationFrame extends JFrame {
             }
         });
 
-        // --- 3. LAYOUT SETUP ---
         setLayout(new BorderLayout());
 
-        // A. Global Layer (Tengah)
         globalLayer = new JLayeredPane();
         add(globalLayer, BorderLayout.CENTER);
 
-        // B. Footer (Fixed Bawah)
         footerPanel = createFooter();
         add(footerPanel, BorderLayout.SOUTH); 
 
-        // Header & Content
         headerPanel = createHeader(user);
         
         cards = new CardLayout();
@@ -64,7 +58,6 @@ public class AppNavigationFrame extends JFrame {
         globalLayer.add(mainPanel, Integer.valueOf(0));
         globalLayer.add(headerPanel, Integer.valueOf(1));
 
-        // Responsive Listener
         addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
                 int w = globalLayer.getWidth(); 
@@ -253,26 +246,24 @@ public class AppNavigationFrame extends JFrame {
         
         modelContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 30)); 
         modelContainer.setBackground(Color.BLACK);
-        modelContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 20, 10)); 
-        // FIX: setPreferredSize dihapus dari sini agar tidak memaksa tinggi 3000px
+        modelContainer.setPreferredSize(new Dimension(950, 3000)); 
 
         JScrollPane scrollModel = new JScrollPane(modelContainer);
         scrollModel.setBorder(null);
         scrollModel.getViewport().setBackground(Color.BLACK);
-        scrollModel.setVerticalScrollBarPolicy(21); 
-        scrollModel.setHorizontalScrollBarPolicy(31);
+        scrollModel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        scrollModel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollModel.getVerticalScrollBar().setUnitIncrement(25);
         
         pModel.add(scrollModel, BorderLayout.CENTER);
         mainPanel.add(pModel, "MODEL");
     }
 
-    // --- FIX PENTING: LOGIKA TINGGI OTOMATIS DI SINI ---
     private void loadModels() {
         modelContainer.removeAll();
         lblPageTitle.setText(selectedBrand.toUpperCase() + " " + selectedTier.toUpperCase() + "S");
         
-        int itemCount = 0; // Variabel hitung jumlah mobil
+        int itemCount = 0;
 
         try {
             Connection conn = KoneksiDB.configDB();
@@ -282,7 +273,7 @@ public class AppNavigationFrame extends JFrame {
             boolean found = false;
             while(rs.next()) {
                 found = true;
-                itemCount++; // Tambah 1 setiap ketemu mobil
+                itemCount++;
                 int id = rs.getInt("id"); String name = rs.getString("model_name");
                 double price = rs.getDouble("price"); int stock = rs.getInt("stock");
                 String img = rs.getString("image_file");
@@ -292,23 +283,15 @@ public class AppNavigationFrame extends JFrame {
                 JLabel empty = new JLabel("No models available.", SwingConstants.CENTER);
                 empty.setForeground(Color.GRAY); empty.setFont(new Font("Segoe UI", Font.ITALIC, 18));
                 modelContainer.add(empty);
-                itemCount = 1; // Anggap 1 item agar layout tidak error
+                itemCount = 1;
             }
         } catch(Exception e) { e.printStackTrace(); }
 
-        // --- RUMUS TINGGI DINAMIS ---
-        // Asumsi grid 3 kolom. 
-        // Jika itemCount = 4 -> butuh 2 baris. 
-        // Tinggi 1 baris mobil = estimasi 460px (Card Height + Gap)
-        int columns = 3; 
-        int rows = (int) Math.ceil((double) itemCount / columns);
-        int dynamicHeight = (rows * 460) + 50; // +50 untuk margin bawah
-
-        // Set tinggi panel sesuai isi konten
+        int rows = (int) Math.ceil((double) itemCount / 3.0); 
+        int dynamicHeight = (rows * 460) + 100; 
         modelContainer.setPreferredSize(new Dimension(950, dynamicHeight));
 
-        modelContainer.revalidate(); 
-        modelContainer.repaint();
+        modelContainer.revalidate(); modelContainer.repaint();
     }
 
     private void updateStock(int id) {
@@ -323,13 +306,12 @@ public class AppNavigationFrame extends JFrame {
         return btn;
     }
 
-    // --- INNER CLASSES ---
-
     class ImagePanel extends JPanel {
         private Image bg; public ImagePanel(String p) { try { bg = new ImageIcon(p).getImage(); } catch (Exception e) {} }
         protected void paintComponent(Graphics g) { super.paintComponent(g); if (bg != null) { g.drawImage(bg, 0, 0, getWidth(), getHeight(), this); g.setColor(new Color(0, 0, 0, 180)); g.fillRect(0, 0, getWidth(), getHeight()); } else { g.setColor(Color.BLACK); g.fillRect(0, 0, getWidth(), getHeight()); } }
     }
 
+    // --- CAR CARD (FIXED ADMIN BUTTON) ---
     class CarCard extends JPanel {
         private int carId; 
         private String carName; 
@@ -357,7 +339,6 @@ public class AppNavigationFrame extends JFrame {
                 public void mouseEntered(MouseEvent e) { isHover = true; repaint(); }
                 public void mouseExited(MouseEvent e) { isHover = false; repaint(); }
             });
-            
             initLayout();
         }
 
@@ -366,12 +347,10 @@ public class AppNavigationFrame extends JFrame {
             g.insets = new Insets(5, 10, 5, 10); 
             g.fill = GridBagConstraints.HORIZONTAL; 
             g.anchor = GridBagConstraints.CENTER;
-            
-            // 1. Spacer
+
             g.gridx = 0; g.gridy = 0; g.weighty = 1.0; 
             add(Box.createVerticalStrut(200), g); 
 
-            // 2. Nama Mobil
             JLabel lblName = new JLabel(carName.toUpperCase());
             lblName.setFont(new Font("Segoe UI", Font.BOLD, 20)); 
             lblName.setForeground(Color.WHITE); 
@@ -379,7 +358,6 @@ public class AppNavigationFrame extends JFrame {
             g.gridy = 1; g.weighty = 0; 
             add(lblName, g);
 
-            // 3. Harga Mobil
             NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
             JLabel lblPrice = new JLabel(fmt.format(carPrice));
             lblPrice.setFont(new Font("Consolas", Font.BOLD, 16)); 
@@ -388,57 +366,54 @@ public class AppNavigationFrame extends JFrame {
             g.gridy = 2; 
             add(lblPrice, g);
 
-            // 4. Panel Bawah (Tombol)
             JPanel bottomPanel = new JPanel(new BorderLayout()); 
             bottomPanel.setOpaque(false);
             
-            JPanel leftContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-            leftContainer.setOpaque(false);
-            
+            // Container Stok di Kiri
             JLabel lblStock = new JLabel(carStock > 0 ? "Stock: " + carStock : "SOLD OUT");
             lblStock.setFont(new Font("Segoe UI", Font.BOLD, 12));
             lblStock.setForeground(carStock > 0 ? new Color(0, 255, 100) : Color.RED);
-            leftContainer.add(lblStock);
+            bottomPanel.add(lblStock, BorderLayout.WEST); 
 
-            if(currentUser.equalsIgnoreCase("admin")) {
-                 ModernButton btnAdd = new ModernButton("+", new Color(0, 150, 0));
-                 btnAdd.setPreferredSize(new Dimension(30, 25)); 
-                 btnAdd.setFont(new Font("Arial", Font.BOLD, 14));
-                 btnAdd.setToolTipText("Add Stock");
-                 btnAdd.addActionListener(ev -> updateStock(carId));
-                 leftContainer.add(btnAdd);
+            // --- LOGIKA TOMBOL UTAMA (MODIFIKASI DI SINI) ---
+            ModernButton btnAction;
+            
+            if (currentUser.equalsIgnoreCase("admin")) {
+                // JIKA ADMIN: TOMBOL JADI "ADD STOCK" (Hijau)
+                btnAction = new ModernButton("ADD STOCK", new Color(0, 150, 0)); 
+                btnAction.addActionListener(ev -> updateStock(carId));
+            } else {
+                // JIKA CUSTOMER: TOMBOL NORMAL "PURCHASE"
+                if (carStock > 0) {
+                    btnAction = new ModernButton("PURCHASE", new Color(0, 100, 200));
+                } else {
+                    btnAction = new ModernButton("EMPTY", new Color(100, 100, 100));
+                    btnAction.setEnabled(false);
+                }
+                // Listener hanya untuk Customer
+                btnAction.addActionListener(e -> {
+                     Car c = selectedTier.equals("Hypercar") ? new Hypercar(carId,selectedBrand,carName,carPrice) : new Supercar(carId,selectedBrand,carName,carPrice);
+                     new PurchaseDialog(AppNavigationFrame.this, c, currentUser);
+                });
             }
 
-            ModernButton btnBuy = new ModernButton(carStock > 0 ? "BUY" : "EMPTY", carStock > 0 ? new Color(0, 100, 200) : new Color(100, 100, 100));
-            btnBuy.setPreferredSize(new Dimension(100, 35)); 
-            btnBuy.setFont(new Font("Segoe UI", Font.BOLD, 12)); 
-            btnBuy.setEnabled(carStock > 0);
-            btnBuy.addActionListener(e -> {
-                 Car c = selectedTier.equals("Hypercar") ? new Hypercar(carId,selectedBrand,carName,carPrice) : new Supercar(carId,selectedBrand,carName,carPrice);
-                 new PurchaseDialog(AppNavigationFrame.this, c, currentUser);
-            });
-
-            bottomPanel.add(leftContainer, BorderLayout.WEST); 
-            bottomPanel.add(btnBuy, BorderLayout.EAST);
+            btnAction.setPreferredSize(new Dimension(110, 35)); 
+            btnAction.setFont(new Font("Segoe UI", Font.BOLD, 11)); 
+            bottomPanel.add(btnAction, BorderLayout.EAST);
             
-            g.gridy = 3; 
-            g.insets = new Insets(15, 10, 20, 10); 
+            g.gridy = 3; g.insets = new Insets(15, 10, 20, 10); 
             add(bottomPanel, g);
         }
 
-        // --- BAGIAN YANG DIPERBAIKI (Var g2d konsisten) ---
         @Override
         protected void paintComponent(Graphics g) {
-            // PERBAIKAN: Menggunakan nama variabel 'g2d' konsisten
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             int w = getWidth(); int h = getHeight();
             
-            // Background Card
             g2d.setColor(new Color(30, 30, 30, 230)); 
             g2d.fillRoundRect(0, 0, w, h, 25, 25);
 
-            // Gambar Mobil
             if (carImage != null) {
                 int imgH = 180; int imgW = (int) ((double)carImage.getWidth(null) / carImage.getHeight(null) * imgH);
                 if(imgW > w - 20) { imgW = w - 20; imgH = (int) ((double)carImage.getHeight(null) / carImage.getWidth(null) * imgW); }
@@ -446,12 +421,13 @@ public class AppNavigationFrame extends JFrame {
                 g2d.drawImage(carImage, imgX, imgY, imgW, imgH, this);
             }
 
-            // Efek Hover Border
-            if (isHover && carStock > 0) {
+            // Hover Border Effect: Hanya untuk Customer (Admin tidak perlu border warna warni)
+            boolean canBuy = !currentUser.equalsIgnoreCase("admin") && carStock > 0;
+            
+            if (isHover && canBuy) {
                 g2d.setColor(selectedTier.equals("Hypercar") ? new Color(255, 0, 80) : new Color(0, 190, 255));
                 g2d.setStroke(new BasicStroke(2f)); 
                 g2d.drawRoundRect(1, 1, w-2, h-2, 25, 25);
-                
                 g2d.setColor(new Color(255, 255, 255, 20)); 
                 g2d.fillRoundRect(0, 0, w, h, 25, 25);
             } else {
